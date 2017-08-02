@@ -1,4 +1,4 @@
-# react-date-range
+# rc-date-range
 ![](https://badge.fury.io/js/react-date-range.svg)
 ![](https://david-dm.org/Adphorus/react-date-range.svg)
 ![](https://david-dm.org/Adphorus/react-date-range/dev-status.svg)
