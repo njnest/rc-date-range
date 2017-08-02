@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import React, { Component, PropTypes } from 'react';
 import moment from 'moment';
 import parseInput from './utils/parseInput.js';
 import DayCell from './DayCell.js';
@@ -16,19 +15,19 @@ function checkRange(dayMoment, range) {
 function checkStartEdge(dayMoment, range) {
   const { startDate } = range;
 
-  return dayMoment.startOf('day').isSame(startDate.startOf('day'));
+  return dayMoment.isSame(startDate);
 }
 
 function checkEndEdge(dayMoment, range) {
   const { endDate } = range;
 
-  return dayMoment.endOf('day').isSame(endDate.endOf('day'));
+  return dayMoment.isSame(endDate);
 }
 
 function isOusideMinMax(dayMoment, minDate, maxDate, format) {
   return (
-    (minDate && dayMoment.isBefore(parseInput(minDate, format, 'startOf'))) ||
-    (maxDate && dayMoment.isAfter(parseInput(maxDate, format, 'endOf')))
+    (minDate && dayMoment.isBefore(parseInput(minDate, format))) ||
+    (maxDate && dayMoment.isAfter(parseInput(maxDate, format)))
   )
 }
 
@@ -37,16 +36,12 @@ class Calendar extends Component {
   constructor(props, context) {
     super(props, context);
 
-    const { format, range, theme, offset, firstDayOfWeek, locale, shownDate } = props;
+    const { format, range, theme, offset, firstDayOfWeek } = props;
 
-    if(locale) {
-      moment.locale(locale);
-    }
-
-    const date = parseInput(props.date, format, 'startOf')
+    const date = parseInput(props.date, format)
     const state = {
       date,
-      shownDate : (shownDate || range && range['endDate'] || date).clone().add(offset, 'months'),
+      shownDate : (range && range['endDate'] || date).clone().add(offset, 'months'),
       firstDayOfWeek: (firstDayOfWeek || moment.localeData().firstDayOfWeek()),
     }
 
@@ -57,15 +52,6 @@ class Calendar extends Component {
   componentDidMount() {
     const { onInit } = this.props;
     onInit && onInit(this.state.date);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const { range, offset } = nextProps;
-    const oldRange = this.props.oldRange;
-
-    if ((range && range['endDate'] && !range['endDate'].isSame(range['startDate'], "day")) || (oldRange && !oldRange["startDate"].isSame(range["startDate"]))) {
-      this.setState({ shownDate : range['endDate'].clone().add(offset, 'months') })
-    }
   }
 
   getShownDate() {
@@ -108,38 +94,30 @@ class Calendar extends Component {
     let month           = moment.months(shownDate.month());
     const year            = shownDate.year();
     const { styles }      = this;
-    const { onlyClasses, lang, showMonthArrow} = this.props;
+    const { onlyClasses, lang } = this.props;
 
     let monthLower = month.toLowerCase()
     month = (lang && LangDic[lang] && LangDic[lang][monthLower]) ? LangDic[lang][monthLower] : month;
 
     return (
       <div style={onlyClasses ? undefined : styles['MonthAndYear']} className={classes.monthAndYearWrapper}>
-        {
-          showMonthArrow ?
-          <button
-            type="button"
-            style={onlyClasses ? undefined : { ...styles['MonthButton'], float : 'left' }}
-            className={classes.prevButton}
-            onClick={this.changeMonth.bind(this, -1)}>
-            <i style={onlyClasses ? undefined : { ...styles['MonthArrow'], ...styles['MonthArrowPrev'] }}></i>
-          </button> : null
-        }
+        <button
+          style={onlyClasses ? undefined : { ...styles['MonthButton'], float : 'left' }}
+          className={classes.prevButton}
+          onClick={this.changeMonth.bind(this, -1)}>
+          <i style={onlyClasses ? undefined : { ...styles['MonthArrow'], ...styles['MonthArrowPrev'] }}></i>
+        </button>
         <span>
           <span className={classes.month}>{month}</span>
           <span className={classes.monthAndYearDivider}> - </span>
           <span className={classes.year}>{year}</span>
         </span>
-        {
-          showMonthArrow ?
-          <button
-            type="button"
-            style={onlyClasses ? undefined : { ...styles['MonthButton'], float : 'right' }}
-            className={classes.nextButton}
-            onClick={this.changeMonth.bind(this, +1)}>
-            <i style={onlyClasses ? undefined : { ...styles['MonthArrow'], ...styles['MonthArrowNext'] }}></i>
-          </button> : null
-        }
+        <button
+          style={onlyClasses ? undefined : { ...styles['MonthButton'], float : 'right' }}
+          className={classes.nextButton}
+          onClick={this.changeMonth.bind(this, +1)}>
+          <i style={onlyClasses ? undefined : { ...styles['MonthArrow'], ...styles['MonthArrowNext'] }}></i>
+        </button>
       </div>
     )
   }
@@ -166,7 +144,7 @@ class Calendar extends Component {
     // TODO: Split this logic into smaller chunks
     const { styles }               = this;
 
-    const { range, minDate, maxDate, format, onlyClasses, disableDaysBeforeToday, specialDays } = this.props;
+    const { range, minDate, maxDate, format, onlyClasses } = this.props;
 
     const shownDate                = this.getShownDate();
     const { date, firstDayOfWeek } = this.state;
@@ -195,13 +173,7 @@ class Calendar extends Component {
     // Current month's days
     for (let i = 1; i <= dayCount; i++) {
       const dayMoment  = shownDate.clone().date(i);
-      // set days before today to isPassive
-      var _today = moment()
-      if (disableDaysBeforeToday && Number(dayMoment.diff(_today,"days")) <= -1) {
-        days.push({ dayMoment ,isPassive:true});
-      } else {
-        days.push({ dayMoment });
-      }
+      days.push({ dayMoment });
     }
 
     // Next month's days
@@ -220,10 +192,6 @@ class Calendar extends Component {
       const isEndEdge     = range && checkEndEdge(dayMoment, range);
       const isEdge        = isStartEdge || isEndEdge;
       const isToday       = today.isSame(dayMoment);
-      const isSunday      = dayMoment.day() === 0;
-      const isSpecialDay  = specialDays && specialDays.some((specialDay) => {
-        return dayMoment.endOf('day').isSame(specialDay.date.endOf('day'));
-      });
       const isOutsideMinMax = isOusideMinMax(dayMoment, minDate, maxDate, format);
 
       return (
@@ -235,8 +203,6 @@ class Calendar extends Component {
           isEndEdge = { isEndEdge }
           isSelected={ isSelected || isEdge }
           isInRange={ isInRange }
-          isSunday={ isSunday }
-          isSpecialDay={ isSpecialDay }
           isToday={ isToday }
           key={ index }
           isPassive = { isPassive || isOutsideMinMax }
@@ -266,17 +232,11 @@ class Calendar extends Component {
 Calendar.defaultProps = {
   format      : 'DD/MM/YYYY',
   theme       : {},
-  showMonthArrow: true,
-  disableDaysBeforeToday: false,
   onlyClasses : false,
-  classNames  : {},
-  specialDays : [],
+  classNames  : {}
 }
 
 Calendar.propTypes = {
-  showMonthArrow : PropTypes.bool,
-  disableDaysBeforeToday : PropTypes.bool,
-  lang           : PropTypes.string,
   sets           : PropTypes.string,
   range          : PropTypes.shape({
     startDate    : PropTypes.object,
@@ -296,9 +256,7 @@ Calendar.propTypes = {
   linkCB         : PropTypes.func,
   theme          : PropTypes.object,
   onlyClasses    : PropTypes.bool,
-  specialDays    : PropTypes.array,
-  classNames     : PropTypes.object,
-  locale         : PropTypes.string
+  classNames     : PropTypes.object
 }
 
 export default Calendar;

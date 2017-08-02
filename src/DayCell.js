@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import React, { Component, PropTypes } from 'react';
 import classnames from 'classnames';
 
 import { defaultClasses } from './styles.js';
@@ -53,7 +52,7 @@ class DayCell extends Component {
 
   getStateStyles() {
     const { hover, active } = this.state;
-    const { isSelected, isInRange, isPassive, isStartEdge, isEndEdge, dayMoment, isToday, isSunday, isSpecialDay } = this.props;
+    const { isSelected, isInRange, isPassive, isStartEdge, isEndEdge, dayMoment, isToday } = this.props;
     const { styles } = this;
 
     const hoverStyle    = hover ? styles['DayHover'] : {};
@@ -64,13 +63,9 @@ class DayCell extends Component {
     const selectedStyle = isSelected ? styles['DaySelected'] : {};
     const inRangeStyle  = isInRange ? styles['DayInRange'] : {};
     const todayStyle    = isToday ? styles['DayToday'] : {};
-    const sundayStyle = isSunday ? styles['DaySunday'] : {};
-    const specialDayStyle = isSpecialDay ? styles['DaySpecialDay'] : {};
 
     return {
       ...todayStyle,
-      ...sundayStyle,
-      ...specialDayStyle,
       ...inRangeStyle,
       ...hoverStyle,
       ...passiveStyle,
@@ -82,7 +77,7 @@ class DayCell extends Component {
   }
 
   getClassNames(classes) {
-    const { isSelected, isInRange, isPassive, isStartEdge, isEndEdge, isToday, isSunday, isSpecialDay } = this.props;
+    const { isSelected, isInRange, isPassive, isStartEdge, isEndEdge, isToday } = this.props;
 
     return classnames({
       [classes.day]       : true,
@@ -91,9 +86,7 @@ class DayCell extends Component {
       [classes.dayInRange]: isInRange,
       [classes.dayStartEdge] : isStartEdge,
       [classes.dayEndEdge] : isEndEdge,
-      [classes.dayToday] : isToday,
-      [classes.daySunday]: isSunday,
-      [classes.daySpecialDay]: isSpecialDay,
+      [classes.dayToday] : isToday
     });
 
   }
@@ -104,25 +97,17 @@ class DayCell extends Component {
     const { styles } = this;
     const stateStyle = this.getStateStyles();
     const classes    = this.getClassNames(classNames);
-    const dayWrapperStyles = {
-      width: styles['Day'].width,
-      height: styles['Day'].height,
-      display: styles['Day'].display
-    };
 
     return (
       <span
-        style={onlyClasses ? undefined : dayWrapperStyles}
-        onClick={ this.handleSelect.bind(this) }>
-        <span
-          onMouseEnter={ this.handleMouseEvent.bind(this) }
-          onMouseLeave={ this.handleMouseEvent.bind(this) }
-          onMouseDown={ this.handleMouseEvent.bind(this) }
-          onMouseUp={ this.handleMouseEvent.bind(this) }
-          className={ classes }
-          style={onlyClasses ? undefined : {...styles['Day'], ...stateStyle}}>
-          { dayMoment.date() }
-        </span>
+        onMouseEnter={ this.handleMouseEvent.bind(this) }
+        onMouseLeave={ this.handleMouseEvent.bind(this) }
+        onMouseDown={ this.handleMouseEvent.bind(this) }
+        onMouseUp={ this.handleMouseEvent.bind(this) }
+        onClick={ this.handleSelect.bind(this) }
+        className={ classes }
+        style={onlyClasses ? undefined : {...styles['Day'], ...stateStyle}}>
+        { dayMoment.date() }
       </span>
     );
   }
@@ -143,7 +128,6 @@ DayCell.propTypes = {
     Day       : PropTypes.object.isRequired
   }).isRequired,
   onlyClasses : PropTypes.bool,
-  isSpecialDay: PropTypes.bool,
   classNames  : PropTypes.object
 }
 
