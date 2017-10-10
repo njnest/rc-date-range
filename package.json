@@ -1,6 +1,6 @@
 {
   "name": "rc-date-range",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "A React component for choosing dates and date ranges.",
   "main": "lib/index.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "prop-types": "^15.5.10"
   },
   "peerDependencies": {
-    "react": "^0.14 || ^15.0.0-rc || ^15.0"
+    "react": "^0.14 || ^15.0.0-rc || ^15.0 || 16.x.x"
   },
   "devDependencies": {
     "babel": "^5.8.23"
